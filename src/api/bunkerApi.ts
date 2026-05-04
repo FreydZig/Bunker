@@ -71,14 +71,14 @@ export async function getRandomCard(): Promise<Card> {
   return parseJson<Card>(res)
 }
 
-/** `POST /api/Sessions` — создать лобби; хост автоматически входит в комнату. */
+/** `POST /api/Sessions` — создать лобби; в теле нужен непустой `hostName`. */
 export async function createSession(
-  body?: CreateSessionRequest | null,
+  body: CreateSessionRequest,
 ): Promise<CreateSessionResponse> {
   const res = await fetch(url('/api/Sessions'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body ?? {}),
+    body: JSON.stringify(body),
   })
   return parseJson<CreateSessionResponse>(res)
 }
@@ -88,11 +88,14 @@ export async function joinSession(
   sessionId: string,
   body: JoinSessionRequest,
 ): Promise<JoinSessionResponse> {
-  const res = await fetch(url(`/api/Sessions/${sessionId}/players`), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
+  const res = await fetch(
+    url(`/api/Sessions/${encodeURIComponent(sessionId)}/players`),
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    },
+  )
   return parseJson<JoinSessionResponse>(res)
 }
 
@@ -101,10 +104,13 @@ export async function startGame(
   sessionId: string,
   playerId: string,
 ): Promise<void> {
-  const res = await fetch(url(`/api/Sessions/${sessionId}/start`), {
-    method: 'POST',
-    headers: { [PLAYER_ID_HEADER]: playerId },
-  })
+  const res = await fetch(
+    url(`/api/Sessions/${encodeURIComponent(sessionId)}/start`),
+    {
+      method: 'POST',
+      headers: { [PLAYER_ID_HEADER]: playerId },
+    },
+  )
   if (res.status === 204) return
   if (!res.ok) {
     throw new BunkerApiError(res.status, await readErrorMessage(res))
@@ -119,6 +125,8 @@ export async function getSession(
   const headers: Record<string, string> = {}
   if (viewerPlayerId) headers[PLAYER_ID_HEADER] = viewerPlayerId
 
-  const res = await fetch(url(`/api/Sessions/${sessionId}`), { headers })
+  const res = await fetch(url(`/api/Sessions/${encodeURIComponent(sessionId)}`), {
+    headers,
+  })
   return parseJson<SessionViewDto>(res)
 }

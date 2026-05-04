@@ -1,0 +1,13 @@
+# Blueprint: репозиторий Bunker (PWA). Перед первым деплоем задайте VITE_API_BASE_URL
+# в панели Render → Environment (URL API, например https://bunker-api.onrender.com).
+services:
+  - type: web
+    name: bunker-pwa
+    runtime: static
+    plan: free
+    region: oregon
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false

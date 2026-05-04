@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-const apiTarget = process.env.VITE_DEV_API_PROXY ?? 'http://localhost:5000'
+const apiTarget = process.env.VITE_DEV_API_PROXY ?? 'https://bunkerapi-kivn.onrender.com'
 
 // https://vite.dev/config/
 export default defineConfig({

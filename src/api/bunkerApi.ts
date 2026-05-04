@@ -71,14 +71,14 @@ export async function getRandomCard(): Promise<Card> {
   return parseJson<Card>(res)
 }
 
-/** `POST /api/Sessions` — создать лобби; хост автоматически входит в комнату. */
+/** `POST /api/Sessions` — создать лобби; в теле нужен непустой `hostName`. */
 export async function createSession(
-  body?: CreateSessionRequest | null,
+  body: CreateSessionRequest,
 ): Promise<CreateSessionResponse> {
   const res = await fetch(url('/api/Sessions'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body ?? {}),
+    body: JSON.stringify(body),
   })
   return parseJson<CreateSessionResponse>(res)
 }

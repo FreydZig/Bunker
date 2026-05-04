@@ -2,7 +2,7 @@
 export type GamePhase = 0 | 1 | 2
 
 export type CreateSessionRequest = {
-  hostName?: string | null
+  hostName: string
 }
 
 export type CreateSessionResponse = {

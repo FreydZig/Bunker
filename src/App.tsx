@@ -178,9 +178,11 @@ function App() {
   function onCreate() {
     void run(async () => {
       const trimmed = hostName.trim()
-      const created = await createSession(
-        trimmed.length > 0 ? { hostName: trimmed } : {},
-      )
+      if (!trimmed) {
+        setError('Укажите имя хоста.')
+        return
+      }
+      const created = await createSession({ hostName: trimmed })
       const id: SessionIdentity = {
         sessionId: created.sessionId,
         playerId: created.playerId,
@@ -289,13 +291,14 @@ function App() {
           <section className="panel">
             <h2>POST /api/Sessions — создать комнату</h2>
             <div className="field">
-              <label htmlFor="hostName">Имя хоста (необязательно)</label>
+              <label htmlFor="hostName">Имя хоста</label>
               <input
                 id="hostName"
                 value={hostName}
                 onChange={(e) => setHostName(e.target.value)}
-                placeholder="Хост"
+                placeholder="Как вас видят в лобби"
                 maxLength={64}
+                required
                 autoComplete="nickname"
               />
             </div>

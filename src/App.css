@@ -203,3 +203,56 @@
   color: var(--text);
   margin: 0.35rem 0 0;
 }
+
+.input-session-code {
+  font-family: var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.session-code-row {
+  margin: 0 0 0.5rem;
+  text-align: left;
+}
+
+.session-code-label {
+  color: var(--text);
+}
+
+.session-code-value {
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: var(--text-h);
+}
+
+.btn-code-reveal {
+  font: inherit;
+  font-family: var(--mono);
+  cursor: pointer;
+  padding: 0.2rem 0.45rem;
+  margin: 0;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  background: var(--code-bg);
+  color: var(--text-h);
+  letter-spacing: 0.2em;
+  vertical-align: baseline;
+}
+
+.btn-code-reveal:hover {
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow);
+}
+
+.btn-code-reveal:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.btn-code-hint {
+  font-family: var(--sans);
+  letter-spacing: normal;
+  font-size: 0.82rem;
+  color: var(--text);
+  margin-left: 0.35rem;
+}

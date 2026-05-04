@@ -18,10 +18,19 @@ import type { Card, SessionViewDto } from './api/types'
 import './App.css'
 
 const STORAGE_KEY = 'bunker:sessionIdentity'
+const SESSION_CODE_LEN = 6
 
 type SessionIdentity = {
   sessionId: string
   playerId: string
+}
+
+function sanitizeSessionCode(raw: string): string {
+  return raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, SESSION_CODE_LEN)
+}
+
+function isValidSessionCode(s: string): boolean {
+  return s.length === SESSION_CODE_LEN && /^[A-Z0-9]+$/.test(s)
 }
 
 function loadIdentity(): SessionIdentity | null {
@@ -31,7 +40,7 @@ function loadIdentity(): SessionIdentity | null {
     const v = JSON.parse(raw) as SessionIdentity
     if (
       typeof v.sessionId === 'string' &&
-      v.sessionId.length > 0 &&
+      isValidSessionCode(v.sessionId) &&
       typeof v.playerId === 'string' &&
       v.playerId.length > 0
     ) {
@@ -76,7 +85,7 @@ function App() {
   const [hostName, setHostName] = useState('')
   const [joinSessionId, setJoinSessionId] = useState(() => {
     const q = new URLSearchParams(window.location.search).get('session')
-    return q?.trim() ?? ''
+    return sanitizeSessionCode(q ?? '')
   })
   const [joinName, setJoinName] = useState('')
 
@@ -89,6 +98,7 @@ function App() {
 
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [roomCodeRevealed, setRoomCodeRevealed] = useState(false)
 
   const apiBaseHint = useMemo(() => {
     const b = import.meta.env.VITE_API_BASE_URL?.trim()
@@ -114,6 +124,7 @@ function App() {
         setError(msg)
         if (e instanceof BunkerApiError && e.status === 404) {
           clearIdentity()
+          setRoomCodeRevealed(false)
           setIdentity(null)
           setSession(null)
         }
@@ -188,6 +199,7 @@ function App() {
         playerId: created.playerId,
       }
       saveIdentity(id)
+      setRoomCodeRevealed(false)
       setIdentity(id)
       setHostName('')
     })
@@ -195,15 +207,20 @@ function App() {
 
   function onJoin() {
     void run(async () => {
-      const sid = joinSessionId.trim()
+      const sid = sanitizeSessionCode(joinSessionId)
       const name = joinName.trim()
-      if (!sid || !name) {
-        setError('Укажите ID сессии и имя.')
+      if (!name) {
+        setError('Укажите имя.')
+        return
+      }
+      if (!isValidSessionCode(sid)) {
+        setError('Код комнаты: ровно 6 символов (латиница A–Z и цифры).')
         return
       }
       const joined = await joinSession(sid, { name })
       const id: SessionIdentity = { sessionId: sid, playerId: joined.playerId }
       saveIdentity(id)
+      setRoomCodeRevealed(false)
       setIdentity(id)
       setJoinName('')
     })
@@ -219,6 +236,7 @@ function App() {
 
   function onLeave() {
     clearIdentity()
+    setRoomCodeRevealed(false)
     setIdentity(null)
     setSession(null)
     setError(null)
@@ -239,6 +257,9 @@ function App() {
     session &&
     session.hostPlayerId === identity.playerId &&
     session.phase === 0
+
+  const roomCodePlainVisible =
+    roomCodeRevealed || (session != null && session.phase !== 0)
 
   return (
     <div className="app">
@@ -313,16 +334,21 @@ function App() {
           </section>
 
           <section className="panel">
-            <h2>POST /api/Sessions/&#123;id&#125;/players — войти в лобби</h2>
+            <h2>POST /api/Sessions/&#123;код&#125;/players — войти в лобби</h2>
             <div className="field">
-              <label htmlFor="joinSessionId">ID сессии (GUID)</label>
+              <label htmlFor="joinSessionId">Код комнаты (6 символов)</label>
               <input
                 id="joinSessionId"
                 value={joinSessionId}
-                onChange={(e) => setJoinSessionId(e.target.value)}
-                placeholder="00000000-0000-0000-0000-000000000000"
+                onChange={(e) =>
+                  setJoinSessionId(sanitizeSessionCode(e.target.value))
+                }
+                placeholder="ABC12Z"
+                maxLength={SESSION_CODE_LEN}
                 spellCheck={false}
                 autoComplete="off"
+                inputMode="text"
+                className="input-session-code"
               />
             </div>
             <div className="field">
@@ -349,7 +375,21 @@ function App() {
       ) : (
         <section className="panel">
           <h2>Комната</h2>
-          <p className="mono">sessionId: {identity.sessionId}</p>
+          <p className="mono session-code-row">
+            <span className="session-code-label">Код комнаты:</span>{' '}
+            {roomCodePlainVisible ? (
+              <span className="session-code-value">{identity.sessionId}</span>
+            ) : (
+              <button
+                type="button"
+                className="btn-code-reveal"
+                onClick={() => setRoomCodeRevealed(true)}
+              >
+                ••••••
+                <span className="btn-code-hint"> нажмите, чтобы показать</span>
+              </button>
+            )}
+          </p>
           <p className="mono">playerId: {identity.playerId}</p>
           <div className="row" style={{ marginTop: '0.65rem' }}>
             <button type="button" className="btn" disabled={busy} onClick={() => void refreshSession()}>
